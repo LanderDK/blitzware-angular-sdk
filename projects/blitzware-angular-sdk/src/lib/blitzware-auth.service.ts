@@ -1,6 +1,10 @@
 import { Injectable, Inject } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { BlitzWareAuthUser } from './types';
+import {
+  BlitzWareAuthParams,
+  BlitzWareAuthUser,
+  BLITZWARE_AUTH_PARAMS,
+} from './types';
 import {
   generateAuthUrl,
   hasAuthParams,
@@ -14,7 +18,6 @@ import {
   removeState,
 } from './utils';
 import { nanoid } from 'nanoid';
-import { BlitzWareAuthConfig } from './blitzware-auth.config';
 
 @Injectable({
   providedIn: 'root',
@@ -25,51 +28,54 @@ export class BlitzWareAuthService {
   private loading = new BehaviorSubject<boolean>(true);
 
   constructor(
-    @Inject(BlitzWareAuthConfig) private config: BlitzWareAuthConfig
+    @Inject(BLITZWARE_AUTH_PARAMS) private authParams: BlitzWareAuthParams
   ) {
-    this.initAuthState();
+    this.checkAuthState();
   }
 
-  private initAuthState(): void {
-    if (hasAuthParams()) {
-      const urlParams = new URLSearchParams(window.location.search);
-      const state = urlParams.get('state');
-      if (state !== getState()) {
-        this.authState.next(false);
-        this.loading.next(false);
-        return;
-      }
+  async checkAuthState(): Promise<void> {
+    return new Promise<void>(async (resolve) => {
+      if (hasAuthParams()) {
+        const urlParams = new URLSearchParams(window.location.search);
 
-      const access_token = urlParams.get('access_token');
-      if (access_token) {
-        setToken('access_token', access_token);
-        this.authState.next(true);
-        fetchUserInfo(access_token).then((user) => {
-          this.user.next(user);
+        const state = urlParams.get('state');
+        if (state !== getState()) {
+          this.authState.next(false);
           this.loading.next(false);
-        });
+          resolve();
+          return;
+        }
+
+        const access_token = urlParams.get('access_token');
+        if (access_token) {
+          setToken('access_token', access_token);
+          const user = await fetchUserInfo(access_token);
+          this.user.next(user);
+          this.authState.next(true);
+          this.loading.next(false);
+        } else {
+          this.authState.next(false);
+          this.loading.next(false);
+        }
+
+        const refresh_token = urlParams.get('refresh_token');
+        if (refresh_token) setToken('refresh_token', refresh_token);
       } else {
-        this.authState.next(false);
+        if (isTokenValid()) {
+          const user = await fetchUserInfo(getToken('access_token') as string);
+          this.user.next(user);
+          this.authState.next(true);
+        }
         this.loading.next(false);
       }
-
-      const refresh_token = urlParams.get('refresh_token');
-      if (refresh_token) setToken('refresh_token', refresh_token);
-    } else {
-      this.authState.next(isTokenValid());
-      if (isTokenValid()) {
-        fetchUserInfo(getToken('access_token') as string).then((user) => {
-          this.user.next(user);
-          this.loading.next(false);
-        });
-      }
-    }
+      resolve();
+    });
   }
 
   login(): void {
     const newState = nanoid();
     setState(newState);
-    const newAuthUrl = generateAuthUrl(this.config, newState);
+    const newAuthUrl = generateAuthUrl(this.authParams, newState);
     window.location.href = newAuthUrl;
   }
 

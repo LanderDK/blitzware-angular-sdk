@@ -1,21 +1,11 @@
 import { Component } from '@angular/core';
-import { BlitzWareAuthService } from 'blitzware-angular-sdk'; 
+import { RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-root',
+  imports: [RouterOutlet],
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
+  styleUrls: ['./app.component.css'],
+  standalone: true,
 })
-export class AppComponent {
-  title = 'blitzware-angular-example';
-
-  constructor(public authService: BlitzWareAuthService) {}
-
-  login() {
-    this.authService.login();
-  }
-
-  logout() {
-    this.authService.logout();
-  }
-}
+export class AppComponent {}

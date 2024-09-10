@@ -1,0 +1,8 @@
+<div *ngIf="auth.isLoading | async; else loaded">
+  <p>Loading...</p>
+</div>
+
+<ng-template #loaded>
+  <h1>Login Page</h1>
+  <button (click)="login()">Login</button>
+</ng-template>

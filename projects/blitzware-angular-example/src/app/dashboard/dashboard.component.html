@@ -1,0 +1,11 @@
+<div class="container mt-5" *ngIf="auth.currentUser | async as user">
+  <div
+    class="row align-items-center profile-header mb-5 text-center text-md-left"
+  >
+    <div class="col-md">
+      <h1>Dashboard</h1>
+      <p>Welcome to the protected dashboard, {{ user.username }}!</p>
+      <button (click)="logout()">Logout</button>
+    </div>
+  </div>
+</div>

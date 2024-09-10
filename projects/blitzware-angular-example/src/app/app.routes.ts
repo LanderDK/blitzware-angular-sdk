@@ -1,16 +1,17 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { HomeComponent } from './home/home.component';
-import { ProfileComponent } from './profile/profile.component';
-import { BlitzWareAuthGuard } from 'blitzware-angular-sdk'; // Adjust path as necessary
+import { LoginComponent } from './login/login.component';
+import { DashboardComponent } from './dashboard/dashboard.component';
+import { BlitzWareAuthGuard } from 'blitzware-angular-sdk';
 
 export const routes: Routes = [
-  { path: '', component: HomeComponent },
+  { path: 'login', component: LoginComponent },
   {
-    path: 'profile',
-    component: ProfileComponent,
+    path: 'dashboard',
+    component: DashboardComponent,
     canActivate: [BlitzWareAuthGuard],
   },
+  { path: '', redirectTo: '/login', pathMatch: 'full' },
 ];
 
 @NgModule({

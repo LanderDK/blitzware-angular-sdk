@@ -1,7 +1,12 @@
 import { Injectable } from '@angular/core';
-import { CanActivate, Router } from '@angular/router';
+import {
+  CanActivate,
+  Router,
+  ActivatedRouteSnapshot,
+  RouterStateSnapshot,
+} from '@angular/router';
 import { BlitzWareAuthService } from './blitzware-auth.service';
-import { map } from 'rxjs/operators';
+import { delay } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -12,15 +17,25 @@ export class BlitzWareAuthGuard implements CanActivate {
     private router: Router
   ) {}
 
-  canActivate() {
-    return this.authService.isAuthenticated.pipe(
-      map((isAuthenticated) => {
-        if (!isAuthenticated) {
-          this.router.navigate(['/login']);
-          return false;
+  async canActivate(
+    next: ActivatedRouteSnapshot,
+    state: RouterStateSnapshot
+  ): Promise<boolean> {
+    await this.authService.checkAuthState();
+
+    return new Promise((resolve) => {
+      this.authService.isAuthenticated.subscribe((isAuthenticated) => {
+        if (isAuthenticated) {
+          resolve(true);
+        } else {
+          this.authService.isLoading.subscribe((isLoading) => {
+            if (!isLoading) {
+              resolve(false);
+              this.router.navigate(['/login']);
+            }
+          });
         }
-        return true;
-      })
-    );
+      });
+    });
   }
 }

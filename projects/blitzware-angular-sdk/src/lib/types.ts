@@ -1,3 +1,5 @@
+import { InjectionToken } from '@angular/core';
+
 export interface BlitzWareAuthContextType {
   user: BlitzWareAuthUser | null;
   isAuthenticated: boolean;
@@ -11,6 +13,9 @@ export interface BlitzWareAuthParams {
   clientId: string;
   redirectUri: string;
 }
+export const BLITZWARE_AUTH_PARAMS = new InjectionToken<BlitzWareAuthParams>(
+  'BlitzWareAuthParams'
+);
 
 export interface BlitzWareAuthProviderParams {
   authParams: BlitzWareAuthParams;
