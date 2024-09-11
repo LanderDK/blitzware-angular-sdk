@@ -2637,6 +2637,13 @@ bl@^4.1.0:
     inherits "^2.0.4"
     readable-stream "^3.4.0"
 
+blitzware-angular-sdk@^0.0.3:
+  version "0.0.3"
+  resolved "https://registry.yarnpkg.com/blitzware-angular-sdk/-/blitzware-angular-sdk-0.0.3.tgz#6d73d2110601644683609354f8368652a9267406"
+  integrity sha512-fR6cXJUzKc10aGBhrNGdHJ7ph2VkEN9xP3ZxTqYwaqOs3p8u6UB0VK116py9sPXRe0TjOKsZfkMmnC/nzGn9fA==
+  dependencies:
+    tslib "^2.3.0"
+
 body-parser@1.20.3, body-parser@^1.19.0:
   version "1.20.3"
   resolved "https://registry.npmjs.org/body-parser/-/body-parser-1.20.3.tgz"
