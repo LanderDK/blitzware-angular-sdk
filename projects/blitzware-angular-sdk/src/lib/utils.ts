@@ -5,9 +5,8 @@ import axios from 'axios';
 const TOKEN_RE = /[?&]access_token=[^&]+/;
 const STATE_RE = /[?&]state=[^&]+/;
 
-export const hasAuthParams = (
-  searchParams: string = window.location.search
-): boolean => TOKEN_RE.test(searchParams) && STATE_RE.test(searchParams);
+export const hasAuthParams = (searchParams = window.location.search): boolean =>
+  TOKEN_RE.test(searchParams) && STATE_RE.test(searchParams);
 
 export const generateAuthUrl = (
   { responseType = 'token', clientId, redirectUri }: BlitzWareAuthParams,
