@@ -8,16 +8,17 @@ import {
 import {
   generateAuthUrl,
   hasAuthParams,
-  fetchUserInfo,
   isTokenValid,
-  getToken,
   setToken,
-  removeToken,
   setState,
   getState,
-  removeState,
+  fetchUserInfo,
+  exchangeCodeForToken,
+  tryRefreshToken,
+  generateSecureState,
+  logoutFromService,
+  clearSession,
 } from './utils';
-import { nanoid } from 'nanoid';
 
 @Injectable({
   providedIn: 'root',
@@ -26,65 +27,170 @@ export class BlitzWareAuthService {
   private authState = new BehaviorSubject<boolean>(isTokenValid());
   private user = new BehaviorSubject<BlitzWareAuthUser | null>(null);
   private loading = new BehaviorSubject<boolean>(true);
+  private didInitialize = false;
+  private state: string;
 
   constructor(
     @Inject(BLITZWARE_AUTH_PARAMS) private authParams: BlitzWareAuthParams
   ) {
-    this.checkAuthState();
+    this.state = getState() || generateSecureState();
+    this.initializeAuth();
   }
 
-  async checkAuthState(): Promise<void> {
-    return new Promise<void>(async (resolve) => {
+  private async initializeAuth(): Promise<void> {
+    if (this.didInitialize) return;
+    this.didInitialize = true;
+
+    try {
+      if (!hasAuthParams()) {
+        if (isTokenValid()) {
+          const userData = await fetchUserInfo(this.authParams.clientId);
+          this.user.next(userData);
+          this.authState.next(true);
+        } else {
+          try {
+            const tokenResponse = await tryRefreshToken(
+              this.authParams.clientId
+            );
+            setToken('access_token', tokenResponse.access_token);
+            if (tokenResponse.refresh_token) {
+              setToken('refresh_token', tokenResponse.refresh_token);
+            }
+
+            const userData = await fetchUserInfo(this.authParams.clientId);
+            this.user.next(userData);
+            this.authState.next(true);
+          } catch (error) {
+            console.error('Failed to refresh token or fetch user info:', error);
+            clearSession();
+            this.authState.next(false);
+            this.user.next(null);
+          }
+        }
+      } else {
+        await this.handleAuthCallback();
+      }
+    } catch (error) {
+      console.error('Authentication initialization failed:', error);
+      clearSession();
+      this.authState.next(false);
+      this.user.next(null);
+    } finally {
+      this.loading.next(false);
+    }
+  }
+
+  private async handleAuthCallback(): Promise<void> {
+    try {
       if (hasAuthParams()) {
         const urlParams = new URLSearchParams(window.location.search);
 
+        // Check for error
+        const error = urlParams.get('error');
+        if (error) {
+          const errorDescription = urlParams.get('error_description');
+          throw new Error(errorDescription || `OAuth error: ${error}`);
+        }
+
         const state = urlParams.get('state');
-        if (state !== getState()) {
-          this.authState.next(false);
-          this.loading.next(false);
-          resolve();
+        if (state !== this.state) {
+          throw new Error('Invalid state parameter');
+        }
+
+        const code = urlParams.get('code');
+        if (code) {
+          // Handle authorization code flow with PKCE
+          const tokenResponse = await exchangeCodeForToken(
+            code,
+            this.authParams.clientId,
+            this.authParams.redirectUri
+          );
+
+          // Store tokens
+          setToken('access_token', tokenResponse.access_token);
+          if (tokenResponse.refresh_token) {
+            setToken('refresh_token', tokenResponse.refresh_token);
+          }
+
+          // Fetch user info
+          const userData = await fetchUserInfo(this.authParams.clientId);
+          this.user.next(userData);
+          this.authState.next(true);
+
+          // Clean URL
+          window.history.replaceState(
+            {},
+            document.title,
+            window.location.pathname
+          );
           return;
         }
 
+        // Handle Implicit flow
         const access_token = urlParams.get('access_token');
         if (access_token) {
           setToken('access_token', access_token);
-          const user = await fetchUserInfo(access_token);
-          this.user.next(user);
           this.authState.next(true);
-          this.loading.next(false);
+
+          try {
+            const userData = await fetchUserInfo(this.authParams.clientId);
+            this.user.next(userData);
+          } catch (error) {
+            console.error('Failed to fetch user info:', error);
+            clearSession();
+            this.authState.next(false);
+            this.user.next(null);
+          }
         } else {
           this.authState.next(false);
-          this.loading.next(false);
         }
 
         const refresh_token = urlParams.get('refresh_token');
         if (refresh_token) setToken('refresh_token', refresh_token);
-      } else {
-        if (isTokenValid()) {
-          const user = await fetchUserInfo(getToken('access_token') as string);
-          this.user.next(user);
-          this.authState.next(true);
-        }
-        this.loading.next(false);
+
+        // Clean URL
+        window.history.replaceState(
+          {},
+          document.title,
+          window.location.pathname
+        );
       }
-      resolve();
-    });
+    } catch (error) {
+      console.error('Failed to handle authorization callback:', error);
+      clearSession();
+      this.authState.next(false);
+      this.user.next(null);
+    }
   }
 
-  login(): void {
-    const newState = nanoid();
-    setState(newState);
-    const newAuthUrl = generateAuthUrl(this.authParams, newState);
-    window.location.href = newAuthUrl;
+  async login(): Promise<void> {
+    try {
+      const newState = generateSecureState();
+      setState(newState);
+      this.state = newState;
+      const newAuthUrl = await generateAuthUrl(this.authParams, newState);
+      window.location.href = newAuthUrl;
+    } catch (error) {
+      console.error('Login failed:', error);
+      throw error;
+    }
   }
 
-  logout(): void {
-    removeToken('access_token');
-    removeToken('refresh_token');
-    removeState();
+  async logout(): Promise<void> {
+    this.loading.next(true);
+
+    try {
+      await logoutFromService(this.authParams.clientId);
+    } catch (error) {
+      // Log the error but continue with local cleanup
+      console.error('Failed to logout from service:', error);
+    }
+
+    // Always clear local state regardless of service call result
+    clearSession();
     this.authState.next(false);
     this.user.next(null);
+    this.loading.next(false);
   }
 
   get isAuthenticated(): Observable<boolean> {
@@ -97,5 +203,18 @@ export class BlitzWareAuthService {
 
   get isLoading(): Observable<boolean> {
     return this.loading.asObservable();
+  }
+
+  // Synchronous getters for immediate access (similar to React hooks)
+  get isAuthenticatedValue(): boolean {
+    return this.authState.value;
+  }
+
+  get currentUserValue(): BlitzWareAuthUser | null {
+    return this.user.value;
+  }
+
+  get isLoadingValue(): boolean {
+    return this.loading.value;
   }
 }

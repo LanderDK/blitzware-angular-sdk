@@ -1,8 +1,24 @@
 <div *ngIf="auth.isLoading | async; else loaded">
-  <p>Loading...</p>
+  <div class="loading">
+    <h2>Loading...</h2>
+    <p>Checking authentication status...</p>
+  </div>
 </div>
 
 <ng-template #loaded>
-  <h1>Login Page</h1>
-  <button (click)="login()">Login</button>
+  <div *ngIf="!(auth.isAuthenticated | async)">
+    <h1>Welcome to BlitzWare</h1>
+    <p>Please log in to access your dashboard.</p>
+    <button (click)="login()" class="btn btn-primary">
+      Login with BlitzWare
+    </button>
+  </div>
+  
+  <div *ngIf="auth.isAuthenticated | async">
+    <h1>You're already logged in!</h1>
+    <p>Redirecting to your dashboard...</p>
+    <a routerLink="/dashboard" class="btn btn-secondary">
+      Go to Dashboard
+    </a>
+  </div>
 </ng-template>

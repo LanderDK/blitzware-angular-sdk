@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { BlitzWareAuthService } from 'blitzware-angular-sdk';
 import { NgIf, AsyncPipe } from '@angular/common';
 
@@ -9,10 +10,27 @@ import { NgIf, AsyncPipe } from '@angular/common';
   templateUrl: './login.component.html',
   styleUrl: './login.component.css',
 })
-export class LoginComponent {
-  constructor(public auth: BlitzWareAuthService) {}
+export class LoginComponent implements OnInit {
+  constructor(
+    public auth: BlitzWareAuthService,
+    private router: Router
+  ) {}
 
-  login() {
-    this.auth.login();
+  ngOnInit() {
+    // Check if user is already authenticated after component loads
+    this.auth.isAuthenticated.subscribe(isAuthenticated => {
+      if (isAuthenticated) {
+        // User is authenticated, redirect to dashboard
+        this.router.navigate(['/dashboard']);
+      }
+    });
+  }
+
+  async login() {
+    try {
+      await this.auth.login();
+    } catch (error) {
+      console.error('Login failed:', error);
+    }
   }
 }

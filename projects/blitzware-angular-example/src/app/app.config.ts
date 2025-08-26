@@ -10,6 +10,7 @@ export const appConfig: ApplicationConfig = {
     provideBlitzWareAuth({
       clientId: 'your-client-id',
       redirectUri: 'your-redirect-uri',
+      responseType: 'code', // or "token" for implicit flow
     }),
   ],
 };

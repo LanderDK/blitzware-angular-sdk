@@ -6,13 +6,13 @@ import {
   RouterStateSnapshot,
 } from '@angular/router';
 import { BlitzWareAuthService } from './blitzware-auth.service';
-import { Observable, firstValueFrom } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import { filter, take } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root',
 })
-export class BlitzWareAuthGuard implements CanActivate {
+export class BlitzWareLoginGuard implements CanActivate {
   constructor(
     private authService: BlitzWareAuthService,
     private router: Router
@@ -34,21 +34,19 @@ export class BlitzWareAuthGuard implements CanActivate {
       // Check authentication status
       const isAuthenticated = this.authService.isAuthenticatedValue;
 
-      if (isAuthenticated) {
+      if (!isAuthenticated) {
+        // User is not authenticated, allow access to login page
         return true;
       } else {
-        // Redirect to login page
-        this.router.navigate(['/login'], {
-          queryParams: { returnUrl: state.url },
-        });
+        // User is already authenticated, redirect to dashboard
+        const returnUrl = next.queryParams['returnUrl'] || '/dashboard';
+        this.router.navigate([returnUrl]);
         return false;
       }
     } catch (error) {
-      console.error('Auth guard error:', error);
-      this.router.navigate(['/login'], {
-        queryParams: { returnUrl: state.url },
-      });
-      return false;
+      console.error('Login guard error:', error);
+      // On error, allow access to login page
+      return true;
     }
   }
 }

@@ -2,16 +2,20 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { LoginComponent } from './login/login.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
-import { BlitzWareAuthGuard } from 'blitzware-angular-sdk';
+import { BlitzWareAuthGuard, BlitzWareLoginGuard } from 'blitzware-angular-sdk';
 
 export const routes: Routes = [
-  { path: 'login', component: LoginComponent },
+  {
+    path: 'login',
+    component: LoginComponent,
+    canActivate: [BlitzWareLoginGuard], // Prevent authenticated users from seeing login
+  },
   {
     path: 'dashboard',
     component: DashboardComponent,
-    canActivate: [BlitzWareAuthGuard],
+    canActivate: [BlitzWareAuthGuard], // Protect dashboard for authenticated users only
   },
-  { path: '', redirectTo: '/login', pathMatch: 'full' },
+  { path: '', redirectTo: '/dashboard', pathMatch: 'full' }, // Redirect to dashboard first
 ];
 
 @NgModule({
