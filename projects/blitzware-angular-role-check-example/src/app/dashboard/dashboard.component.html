@@ -1,0 +1,41 @@
+<div class="container mt-5" *ngIf="auth.currentUser | async as user">
+  <div class="row align-items-center profile-header mb-5 text-center text-md-left">
+    <div class="col-md">
+      <h1>Role Check Dashboard</h1>
+      <p>Welcome to the role-protected dashboard, {{ user.username }}!</p>
+      
+      <div class="role-checks mb-4 p-3 border rounded">
+        <h3>Role Checks:</h3>
+        <p>
+          <strong>Admin Role:</strong>
+          <span [style.color]="hasAdminRole ? 'green' : 'red'">
+            {{ hasAdminRole ? '✓ You have admin access' : '✗ Admin access denied' }}
+          </span>
+        </p>
+        <p>
+          <strong>Premium Role:</strong>
+          <span [style.color]="hasPremiumRole ? 'green' : 'red'">
+            {{ hasPremiumRole ? '✓ You have premium access' : '✗ Premium access denied' }}
+          </span>
+        </p>
+      </div>
+
+      <div *ngIf="hasAdminRole" class="admin-section mb-4 p-3 bg-light-green rounded">
+        <h3>🔒 Admin Only Section</h3>
+        <p>This content is only visible to users with the admin role.</p>
+      </div>
+
+      <div *ngIf="hasPremiumRole" class="premium-section mb-4 p-3 bg-light-yellow rounded">
+        <h3>⭐ Premium Only Section</h3>
+        <p>This content is only visible to users with the premium role.</p>
+      </div>
+
+      <div class="user-info mb-4">
+        <h3>User Information:</h3>
+        <pre class="p-3 bg-light rounded">{{ user | json }}</pre>
+      </div>
+      
+      <button (click)="logout()" class="btn btn-primary">Logout</button>
+    </div>
+  </div>
+</div>

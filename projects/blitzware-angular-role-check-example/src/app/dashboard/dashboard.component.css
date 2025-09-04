@@ -1,0 +1,35 @@
+.role-checks {
+  border: 1px solid #ddd;
+  padding: 20px;
+  margin: 20px 0;
+  border-radius: 5px;
+}
+
+.admin-section {
+  background-color: #e8f5e8;
+  border: 1px solid #c3e6c3;
+  padding: 20px;
+  margin: 20px 0;
+  border-radius: 5px;
+}
+
+.premium-section {
+  background-color: #fff3cd;
+  border: 1px solid #ffecb5;
+  padding: 20px;
+  margin: 20px 0;
+  border-radius: 5px;
+}
+
+.user-info {
+  margin: 20px 0;
+}
+
+pre {
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 5px;
+  border: 1px solid #e9ecef;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}

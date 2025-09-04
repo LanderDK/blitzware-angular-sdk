@@ -3,7 +3,8 @@
   "version": "2.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
+    "start": "ng serve blitzware-angular-example",
+    "start2": "ng serve blitzware-angular-role-check-example",
     "build": "ng build blitzware-angular-sdk",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
