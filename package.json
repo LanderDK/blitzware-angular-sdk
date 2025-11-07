@@ -22,7 +22,7 @@
     "axios": "^1.7.7",
     "buffer": "^6.0.3",
     "blitzware-angular-sdk": "^0.0.3",
-    "rxjs": "~7.8.0",
+    "rxjs": "~7.8.2",
     "tslib": "^2.3.0",
     "zone.js": "~0.14.10"
   },
