@@ -44,20 +44,30 @@ export class BlitzWareAuthService {
     try {
       if (!hasAuthParams()) {
         if (isTokenValid()) {
-          const userData = await fetchUserInfo(this.authParams.clientId);
+          const userData = await fetchUserInfo(
+            this.authParams.clientId,
+            undefined,
+            this.authParams.authBaseUrl
+          );
           this.user.next(userData);
           this.authState.next(true);
         } else {
           try {
             const tokenResponse = await tryRefreshToken(
-              this.authParams.clientId
+              this.authParams.clientId,
+              undefined,
+              this.authParams.authBaseUrl
             );
             setToken('access_token', tokenResponse.access_token);
             if (tokenResponse.refresh_token) {
               setToken('refresh_token', tokenResponse.refresh_token);
             }
 
-            const userData = await fetchUserInfo(this.authParams.clientId);
+            const userData = await fetchUserInfo(
+              this.authParams.clientId,
+              undefined,
+              this.authParams.authBaseUrl
+            );
             this.user.next(userData);
             this.authState.next(true);
           } catch (error) {
@@ -103,7 +113,8 @@ export class BlitzWareAuthService {
           const tokenResponse = await exchangeCodeForToken(
             code,
             this.authParams.clientId,
-            this.authParams.redirectUri
+            this.authParams.redirectUri,
+            this.authParams.authBaseUrl
           );
 
           // Store tokens
@@ -113,7 +124,11 @@ export class BlitzWareAuthService {
           }
 
           // Fetch user info
-          const userData = await fetchUserInfo(this.authParams.clientId);
+          const userData = await fetchUserInfo(
+            this.authParams.clientId,
+            undefined,
+            this.authParams.authBaseUrl
+          );
           this.user.next(userData);
           this.authState.next(true);
 
@@ -133,7 +148,11 @@ export class BlitzWareAuthService {
           this.authState.next(true);
 
           try {
-            const userData = await fetchUserInfo(this.authParams.clientId);
+            const userData = await fetchUserInfo(
+              this.authParams.clientId,
+              undefined,
+              this.authParams.authBaseUrl
+            );
             this.user.next(userData);
           } catch (error) {
             console.error('Failed to fetch user info:', error);
@@ -180,7 +199,7 @@ export class BlitzWareAuthService {
     this.loading.next(true);
 
     try {
-      await logoutFromService(this.authParams.clientId);
+      await logoutFromService(this.authParams.clientId, this.authParams.authBaseUrl);
     } catch (error) {
       // Log the error but continue with local cleanup
       console.error('Failed to logout from service:', error);

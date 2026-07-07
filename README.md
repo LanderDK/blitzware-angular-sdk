@@ -2,6 +2,12 @@
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 18.2.3.
 
+## Managed Auth Domains
+
+`authBaseUrl` is optional. Omit it to keep using `https://auth.blitzware.xyz/api/auth/`; set it to the managed auth domain shown in the BlitzWare dashboard, such as `https://acme.auth.blitzware.xyz/api/auth/`.
+
+If Google, Microsoft, Discord, or another social provider is enabled, add the managed-domain callback URL in that provider's settings before switching users to the managed domain. This option does not require JWKS, ID tokens, or OIDC discovery configuration.
+
 ## Development server
 
 Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.

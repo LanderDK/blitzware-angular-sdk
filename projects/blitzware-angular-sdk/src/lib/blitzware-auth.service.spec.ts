@@ -3,6 +3,7 @@ import { take } from 'rxjs/operators';
 import { BlitzWareAuthService } from './blitzware-auth.service';
 import { BLITZWARE_AUTH_PARAMS } from './types';
 import { BlitzWareAuthUser } from './types';
+import { generateAuthUrl, normalizeAuthBaseUrl } from './utils';
 
 // Mock global objects
 const mockLocalStorage = {
@@ -69,6 +70,23 @@ describe('BlitzWareAuthService', () => {
 
   it('should be created', () => {
     expect(service).toBeTruthy();
+  });
+
+  describe('authBaseUrl', () => {
+    it('keeps the default auth URL when omitted', () => {
+      expect(normalizeAuthBaseUrl()).toBe('https://auth.blitzware.xyz/api/auth/');
+    });
+
+    it('uses custom managed auth base URL for authorize URLs', async () => {
+      const url = await generateAuthUrl({
+        clientId: 'test-client-id',
+        redirectUri: 'http://localhost:4200/callback',
+        authBaseUrl: 'https://acme.auth.blitzware.xyz/api/auth',
+      }, 'test-state');
+
+      expect(url).toContain('https://acme.auth.blitzware.xyz/api/auth/authorize');
+      expect(url).not.toContain('/api/auth//authorize');
+    });
   });
 
   describe('hasRole method', () => {

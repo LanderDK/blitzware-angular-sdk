@@ -4,6 +4,7 @@ export interface BlitzWareAuthParams {
   responseType?: 'code' | 'token';
   clientId: string;
   redirectUri: string;
+  authBaseUrl?: string;
 }
 
 export const BLITZWARE_AUTH_PARAMS = new InjectionToken<BlitzWareAuthParams>(
