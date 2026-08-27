@@ -63,6 +63,7 @@ describe('BlitzWareAuthService', () => {
   afterEach(() => {
     // Reset mocks
     mockLocalStorage.getItem.calls.reset();
+    mockLocalStorage.getItem.and.returnValue(null);
     mockLocalStorage.setItem.calls.reset();
     mockLocalStorage.removeItem.calls.reset();
     mockFetch.calls.reset();
@@ -70,6 +71,22 @@ describe('BlitzWareAuthService', () => {
 
   it('should be created', () => {
     expect(service).toBeTruthy();
+  });
+
+  it('returns null when no access or refresh session exists', async () => {
+    await expectAsync(service.getAccessToken()).toBeResolvedTo(null);
+  });
+
+  it('returns an access token that is valid beyond the requested window', async () => {
+    const payload = btoa(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 3600 }));
+    const token = `header.${payload}.signature`;
+    mockLocalStorage.getItem.and.callFake((key: string) =>
+      key === 'access_token' ? token : null
+    );
+
+    await expectAsync(
+      service.getAccessToken({ minValiditySeconds: 60 })
+    ).toBeResolvedTo(token);
   });
 
   describe('authBaseUrl', () => {

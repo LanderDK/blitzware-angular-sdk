@@ -1,9 +1,10 @@
-import { Injectable, Inject } from '@angular/core';
+import { Injectable, Inject, OnDestroy } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import {
   BlitzWareAuthParams,
   BlitzWareAuthUser,
   BLITZWARE_AUTH_PARAMS,
+  GetAccessTokenOptions,
 } from './types';
 import {
   generateAuthUrl,
@@ -14,27 +15,40 @@ import {
   getState,
   fetchUserInfo,
   exchangeCodeForToken,
-  tryRefreshToken,
   generateSecureState,
   logoutFromService,
   clearSession,
 } from './utils';
+import { createAccessTokenManager } from './tokenManager';
 
 @Injectable({
   providedIn: 'root',
 })
-export class BlitzWareAuthService {
+export class BlitzWareAuthService implements OnDestroy {
   private authState = new BehaviorSubject<boolean>(isTokenValid());
   private user = new BehaviorSubject<BlitzWareAuthUser | null>(null);
   private loading = new BehaviorSubject<boolean>(true);
   private didInitialize = false;
   private state: string;
+  private accessTokenManager: ReturnType<typeof createAccessTokenManager>;
 
   constructor(
     @Inject(BLITZWARE_AUTH_PARAMS) private authParams: BlitzWareAuthParams
   ) {
     this.state = getState() || generateSecureState();
+    this.accessTokenManager = createAccessTokenManager(authParams, {
+      onSessionExpired: () => {
+        this.authState.next(false);
+        this.user.next(null);
+      },
+      onSessionRefreshed: () => this.authState.next(true),
+    });
+    this.accessTokenManager.start();
     this.initializeAuth();
+  }
+
+  ngOnDestroy(): void {
+    this.accessTokenManager.dispose();
   }
 
   private async initializeAuth(): Promise<void> {
@@ -53,19 +67,8 @@ export class BlitzWareAuthService {
           this.authState.next(true);
         } else {
           try {
-            const tokenResponse = await tryRefreshToken(
-              this.authParams.clientId,
-              undefined,
-              this.authParams.authBaseUrl
-            );
-            setToken('access_token', tokenResponse.access_token);
-            if (tokenResponse.refresh_token) {
-              setToken('refresh_token', tokenResponse.refresh_token);
-            }
-            if (tokenResponse.id_token) {
-              setToken('id_token', tokenResponse.id_token);
-            }
-
+            const token = await this.getAccessToken({ minValiditySeconds: 0 });
+            if (!token) return;
             const userData = await fetchUserInfo(
               this.authParams.clientId,
               undefined,
@@ -75,9 +78,6 @@ export class BlitzWareAuthService {
             this.authState.next(true);
           } catch (error) {
             console.error('Failed to refresh token or fetch user info:', error);
-            clearSession();
-            this.authState.next(false);
-            this.user.next(null);
           }
         }
       } else {
@@ -216,6 +216,10 @@ export class BlitzWareAuthService {
     this.authState.next(false);
     this.user.next(null);
     this.loading.next(false);
+  }
+
+  getAccessToken(options?: GetAccessTokenOptions): Promise<string | null> {
+    return this.accessTokenManager.getAccessToken(options);
   }
 
   get isAuthenticated(): Observable<boolean> {
