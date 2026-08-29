@@ -4439,10 +4439,10 @@ jasmine-core@^4.1.0:
   resolved "https://registry.npmjs.org/jasmine-core/-/jasmine-core-4.6.1.tgz"
   integrity sha512-VYz/BjjmC3klLJlLwA4Kw8ytk0zDSmbbDLNs794VnWmkcCB7I9aAL/D48VNQtmITyPvea2C3jdUMfc3kAoy0PQ==
 
-jasmine-core@~5.2.0:
-  version "5.2.0"
-  resolved "https://registry.npmjs.org/jasmine-core/-/jasmine-core-5.2.0.tgz"
-  integrity sha512-tSAtdrvWybZkQmmaIoDgnvHG8ORUNw5kEVlO5CvrXj02Jjr9TZrmjFq7FUiOUzJiOP2wLGYT6PgrQgQF4R1xiw==
+jasmine-core@~5.12.1:
+  version "5.12.1"
+  resolved "https://registry.yarnpkg.com/jasmine-core/-/jasmine-core-5.12.1.tgz#17961990e04a7f7ffafa0e1488875cc9b9d51de3"
+  integrity sha512-P/UbRZ0LKwXe7wEpwDheuhunPwITn4oPALhrJEQJo6756EwNGnsK/TSQrWojBB4cQDQ+VaxWYws9tFNDuiMh2Q==
 
 jest-worker@^27.4.5:
   version "27.5.1"
